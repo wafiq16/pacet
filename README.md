@@ -16,4 +16,4 @@ hardware :
 4. kabel jumber.
 
 
-terima kasih diucapkan kepada teman-teman, dosen pembimbing, dan stackoverflow yang berperan besar dalam selesainya project ini.
+terima kasih diucapkan kepada Tuhan yang maha esa, teman-teman, dosen pembimbing, dan stackoverflow yang berperan besar dalam selesainya project ini.
