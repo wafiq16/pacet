@@ -15,17 +15,21 @@ ESP8266WiFiMulti WiFiMulti;
  
 // Buat object http
 HTTPClient http;
- 
+
+//definisi string payload untuk menampung hhtp.getstring(); 
 String payload;
 
+//definisi url pembawa variabel ke ip web server
 String url = "http://192.168.43.231/wsbasisdata/Simpandata.php?suhu=";
 
+//definisi pin led,sensor,lcd dan kondisi awal pompa air
 int pompa = 2;
 int pinDHT11 = 2; //d4
 int led1 = 0;   //d3
 SimpleDHT11 dht11(pinDHT11);
 LiquidCrystal_I2C lcd(0x3F,16,2); 
 
+//fungsi pendefinisian kondisi awal
 void setup() {
   
   Serial.begin(115200);
@@ -36,11 +40,12 @@ void setup() {
     USE_SERIAL.begin(115200);
     USE_SERIAL.setDebugOutput(false);
     
+ //supaya pada serial monitor terlihat posisi loading
     for(uint8_t t = 4; t > 0; t--) {
         USE_SERIAL.printf("[SETUP] Tunggu %d...\n", t);
         USE_SERIAL.flush();
     }
-    
+    //definisi wifi yang digunakan sebagai server
     WiFi.mode(WIFI_STA);
     WiFiMulti.addAP("A1601", "12345678"); // Sesuaikan SSID dan password ini
 }
@@ -55,15 +60,16 @@ void loop() {
   byte temperature = 0;
   byte humidity = 0;
   int err = SimpleDHTErrSuccess;
+  //pernyataan apakah sensor berhasil membaca atau tidak
   if ((err = dht11.read(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
     Serial.print("Read DHT11 failed, err="); Serial.println(err);delay(1000);
     return;
   }
-  
+  //menampilkan suhu dan kelembapan pada serial monitor
   Serial.print("Sample OK: ");
   Serial.print((float)temperature); Serial.print(" *C, "); 
   Serial.print((float)humidity); Serial.println("%");
-
+  //isialisasi kondisi pompa air berdasarkan kondisi suhu dan kelembapan
   if((float)temperature<25){
     digitalWrite(led1, LOW);
     pompa = 0;
@@ -80,7 +86,7 @@ void loop() {
     digitalWrite(led1, LOW);
     pompa = 0;
     }
-
+  //pernyataan untuk menampilkan suhu dan kelembapan pada lcd
   lcd.init();
   lcd.setCursor(1,0);
   lcd.print("T = ");
@@ -88,25 +94,28 @@ void loop() {
   lcd.setCursor(1,1);
   lcd.print("H = ");
   lcd.print((float)humidity); lcd.println("%");
+  //
   delay(1000);
-
+  
+  //definisi variabel penyimpan data yang akan dikirim ke web server
   String suhu = (String)temperature;
   String kelembapan = (String)humidity;
   String sanyo = (String)pompa;
-
+  
+ //checking data sudah benar apa belum
   Serial.println(suhu);
   Serial.println(kelembapan);
   Serial.println(pompa);
   
+ //delay
     delayMicroseconds(280);
- 
     delayMicroseconds(40);
-    //digitalWrite(ledPin,HIGH); // turn the LED off
     delayMicroseconds(9680);
 
+ //kondisi jika wifi sudah tersambung
     if((WiFiMulti.run() == WL_CONNECTED)) {
   
-        // Tambahkan nilai suhu pada URL yang sudah kita buat
+        // Tambahkan nilai suhu, kelembapan dan kondisi pompa air pada URL yang sudah kita buat
         USE_SERIAL.print("[HTTP] Memulai...\n");
         http.begin( url + (String) suhu + "&kelembapan="+ (String) kelembapan + "&sanyo=" + (String) sanyo );
         
@@ -132,6 +141,7 @@ void loop() {
         }
         http.end();
     }
+     //jika tidak berhasil mengirim data maka akan muncul "gagal bambank"
      else{ 
      Serial.println("gagal bambank");
      }
